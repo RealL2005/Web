@@ -79,7 +79,7 @@ const Homepage = () => {
                                     </ul>
                                     <ul className="nav pull-right">
                                         <li>
-                                            <Link to="/homepage">HELP</Link>
+                                            <Link to="/help">HELP</Link>
                                         </li>
                                         <li className="divider-vertical"></li>
                                         <li className="dropdown">

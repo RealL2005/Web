@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './Task.css';
+import {Link} from "react-router-dom";
 
 const Task = () => {
     const [TaskList, setTaskList] = useState([]);
@@ -44,7 +45,8 @@ const Task = () => {
                         ...item,
                         text: inputText,
                         tag: tagMap[activePanel] || '',
-                        attachment: attachment || item.attachment,
+                        attachment: attachment ? attachment : item.attachment,
+                        attachmentPreview: item.attachmentPreview,
                         comments: item.comments
                     };
                 }
@@ -55,18 +57,21 @@ const Task = () => {
             setInputText('');
             setInputTag('');
             setAttachment(null);
+            setAttachmentPreview('');
         } else {
             // 添加新任务
             const newTask = {
                 text: inputText,
                 tag: tagMap[activePanel] || '',
                 attachment: attachment,
+                attachmentPreview: attachmentPreview,
                 comments: [],
             };
             setTaskList([...TaskList, newTask]);
             setInputText('');
             setInputTag('');
             setAttachment(null);
+            setAttachmentPreview('');
         }
     };
 
@@ -101,10 +106,8 @@ const Task = () => {
         const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
         if (file && allowedTypes.includes(file.type)) {
             setAttachment(file);
-            console.log(file);
-            console.log(attachment);
+
             const previewUrl = URL.createObjectURL(file);
-            console.log(previewUrl);
             setAttachmentPreview(previewUrl);
         } else {
             alert('只支持 JPEG、PNG 和 PDF 文件。');
@@ -113,162 +116,270 @@ const Task = () => {
 
 
     return (
-        <div className="container">
-            <div className="left-panel" onClick={() => setActivePanel('left')}>
-                <h2>ToDo</h2>
-            </div>
-            <div className="center-panel" onClick={() => setActivePanel('center')}>
-                <h2>Doing</h2>
-            </div>
-            <div className="right-panel" onClick={() => setActivePanel('right')}>
-                <h2>Done</h2>
-            </div>
+        <>
+            <button className="return-home">
+                <Link to='/homepage'><b>返回homepage</b></Link>
+            </button>
+            <div className="container">
+                <div className="left-panel" onClick={() => setActivePanel('left')}>
+                        <h2>ToDo</h2>
+                    </div>
+                    <div className="center-panel" onClick={() => setActivePanel('center')}>
+                        <h2>Doing</h2>
+                    </div>
+                    <div className="right-panel" onClick={() => setActivePanel('right')}>
+                        <h2>Done</h2>
+                    </div>
 
-            {activePanel === 'left' && (
-                <div className="panel-content">
-                    <h3>待办事项</h3>
-                    <button onClick={() => setShowInput(true)}>创建</button>
-                    {showInput && (
-                        <div className="input-area">
-                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
-                                   placeholder="输入内容"/>
-                            <input type="file" onChange={handleFileChange}/>
-                            {attachmentPreview && (
-                                <div className="attachment-preview">
-                                    <h4>附件预览:</h4>
-                                    {attachment ? (
-                                        attachment.type !== 'application/pdf' ? (
-                                            <img src={attachmentPreview} alt="Attachment" style={{ width: '200px' }} />
+                    {activePanel === 'left' && (
+                        <div className="panel-content">
+                            <h3>待办事项</h3>
+                            <button onClick={() => setShowInput(true)}>创建</button>
+                            {showInput && (
+                                <div className="input-area">
+                                    <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+                                           placeholder="输入内容"/>
+                                    <input type="file" onChange={handleFileChange}/>
+                                    {attachmentPreview && (
+                                        <div className="attachment-preview">
+                                            <h4>附件预览:</h4>
+                                            {attachment ? (
+                                                attachment.type !== 'application/pdf' ? (
+                                                    <img src={attachmentPreview} alt="Attachment" style={{ width: '200px' }} />
+                                                ) : (
+                                                    <a href={attachmentPreview} target="_blank" rel="noopener noreferrer">{attachment.name}</a>
+                                                )
+                                            ) : (
+                                                <p>请上传文件以查看预览。</p>
+                                            )}
+                                        </div>
+                                    )}
+                                    <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
+                                    {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
+                                </div>
+                            )}
+
+                            <div className="item-list">
+                            {TaskList.map((item, index) => (
+                                <div key={index} className="item">
+                                    <a rel="noopener noreferrer">{item.text} </a>
+                                    <span className="tag">{item.tag}</span>
+
+                                    <span className="attachment">
+                                    {item.attachment ? (
+                                        item.attachment.type !== 'application/pdf' ? (
+                                            <img src={item.attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
                                         ) : (
-                                            <a href={attachmentPreview} target="_blank" rel="noopener noreferrer">{attachment.name}</a>
+                                            <a href={item.attachmentPreview} target="_blank"
+                                               rel="noopener noreferrer">{item.attachment.name}</a>
                                         )
                                     ) : (
-                                        <p>请上传文件以查看预览。</p>
+                                        <p>可以上传附件</p>
                                     )}
-                                </div>
-                            )}
-                            <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
-                            {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
-                        </div>
-                    )}
-
-                    <div className="item-list">
-                    {TaskList.map((item, index) => (
-                        <div key={index} className="item">
-                            <a rel="noopener noreferrer">{item.text} </a>
-                            <span className="tag">{item.tag}</span>
-                            {/*{item.attachment && <span className="attachment">附件: {item.attachment.name}</span>}*/}
-                            {/*{item.attachment && (*/}
-                            {/*    <span className="attachment">*/}
-                            {/*    <a href={item.attachmentPreview} target="_blank" rel="noopener noreferrer" className="attachment">*/}
-                            {/*        附件: {item.attachment.name}*/}
-                            {/*    </a>*/}
-                            {/*    </span>*/}
-                            {/*)}*/}
-                            <span className="attachment">
-                            {attachment ? (
-                                attachment.type !== 'application/pdf' ? (
-                                    <img src={attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
-                                ) : (
-                                    <a href={attachmentPreview} target="_blank"
-                                       rel="noopener noreferrer">{attachment.name}</a>
-                                )
-                            ) : (
-                                <p>请上传文件以查看预览。</p>
-                            )}
-                            </span>
-                                <div className="comments-section">
-                                <button onClick={() => {
-                                    const commentsDiv = document.getElementById(`comments-${index}`);
-                                    commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
-                                }}>
-                                    {item.comments.length > 0 ? '收起评论' : '添加评论'}
-                                </button>
-                                <div id={`comments-${index}`} style={{display: 'none'}}>
-                                    {item.comments.map((comment, i) => (
-                                        <div key={i} className="comment">
-                                            <span>{comment.text} </span>
-                                            <span className="comment-time">({comment.time})</span>
+                                    </span>
+                                        <div className="comments-section">
+                                        <button onClick={() => {
+                                            const commentsDiv = document.getElementById(`comments-${index}`);
+                                            commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
+                                        }}>
+                                            {item.comments.length > 0 ? '收起评论' : '添加评论'}
+                                        </button>
+                                        <div id={`comments-${index}`} style={{display: 'none'}}>
+                                            {item.comments.map((comment, i) => (
+                                                <div key={i} className="comment">
+                                                    <span>{comment.text} </span>
+                                                    <span className="comment-time">({comment.time})</span>
+                                                </div>
+                                            ))}
+                                            <input
+                                                type="text"
+                                                placeholder="添加评论"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && e.target.value) {
+                                                        handleAddComment(index, e.target.value);
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                            />
                                         </div>
-                                    ))}
-                                    <input
-                                        type="text"
-                                        placeholder="添加评论"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && e.target.value) {
-                                                handleAddComment(index, e.target.value);
-                                                e.target.value = '';
-                                            }
-                                        }}
-                                    />
+                                    </div>
+                                    <button onClick={() => handleEditItem(index)}>编辑</button>
+                                    <button onClick={() => handleDeleteItem(index)}>删除</button>
                                 </div>
+                                ))}
                             </div>
-                            <button onClick={() => handleEditItem(index)}>编辑</button>
-                            <button onClick={() => handleDeleteItem(index)}>删除</button>
-                        </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {activePanel === 'center' && (
-                <div className="panel-content">
-                    <h3>进行中</h3>
-                    <button onClick={() => setShowInput(true)}>创建</button>
-                    {showInput && (
-                        <div className="input-area">
-                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
-                                   placeholder="输入内容"/>
-                            <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
-                            {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
                         </div>
                     )}
 
-                    <div className="item-list">
-                        {TaskList.map((item, index) => (
-                            <div key={index} className="item">
-                                <a rel="noopener noreferrer">{item.text}</a>
-                                <span className="tag">{item.tag}</span>
-                                <button onClick={() => handleEditItem(index)}>编辑</button>
-                                <button onClick={() => handleDeleteItem(index)}>删除</button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                    {activePanel === 'center' && (
+                        <div className="panel-content">
+                            <h3>进行中</h3>
+                            <button onClick={() => setShowInput(true)}>创建</button>
+                            {showInput && (
+                                <div className="input-area">
+                                    <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+                                           placeholder="输入内容"/>
+                                    <input type="file" onChange={handleFileChange}/>
+                                    {attachmentPreview && (
+                                        <div className="attachment-preview">
+                                            <h4>附件预览:</h4>
+                                            {attachment ? (
+                                                attachment.type !== 'application/pdf' ? (
+                                                    <img src={attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
+                                                ) : (
+                                                    <a href={attachmentPreview} target="_blank"
+                                                       rel="noopener noreferrer">{attachment.name}</a>
+                                                )
+                                            ) : (
+                                                <p>请上传文件以查看预览。</p>
+                                            )}
+                                        </div>
+                                    )}
+                                    <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
+                                    {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
+                                </div>
+                            )}
 
-            {activePanel === 'right' && (
-                <div className="panel-content">
-                    <h3>已完成</h3>
-                    <button onClick={() => setShowInput(true)}>创建</button>
-                    {showInput && (
-                        <div className="input-area">
-                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
-                                   placeholder="输入内容"/>
-                            <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
-                            {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
+                            <div className="item-list">
+                                {TaskList.map((item, index) => (
+                                    <div key={index} className="item">
+                                        <a rel="noopener noreferrer">{item.text} </a>
+                                        <span className="tag">{item.tag}</span>
+
+                                        <span className="attachment">
+                                    {item.attachment ? (
+                                        item.attachment.type !== 'application/pdf' ? (
+                                            <img src={item.attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
+                                        ) : (
+                                            <a href={item.attachmentPreview} target="_blank"
+                                               rel="noopener noreferrer">{item.attachment.name}</a>
+                                        )
+                                    ) : (
+                                        <p>可以上传附件</p>
+                                    )}
+                                    </span>
+                                        <div className="comments-section">
+                                            <button onClick={() => {
+                                                const commentsDiv = document.getElementById(`comments-${index}`);
+                                                commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
+                                            }}>
+                                                {item.comments.length > 0 ? '收起评论' : '添加评论'}
+                                            </button>
+                                            <div id={`comments-${index}`} style={{display: 'none'}}>
+                                                {item.comments.map((comment, i) => (
+                                                    <div key={i} className="comment">
+                                                        <span>{comment.text} </span>
+                                                        <span className="comment-time">({comment.time})</span>
+                                                    </div>
+                                                ))}
+                                                <input
+                                                    type="text"
+                                                    placeholder="添加评论"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && e.target.value) {
+                                                            handleAddComment(index, e.target.value);
+                                                            e.target.value = '';
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button onClick={() => handleEditItem(index)}>编辑</button>
+                                        <button onClick={() => handleDeleteItem(index)}>删除</button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
-                    <div className="item-list">
-                        {TaskList.map((item, index) => (
-                            <div key={index} className="item">
-                                <a rel="noopener noreferrer">{item.text}</a>
-                                <span className="tag">{item.tag}</span>
-                                <button onClick={() => handleEditItem(index)}>编辑</button>
-                                <button onClick={() => handleDeleteItem(index)}>删除</button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                    {activePanel === 'right' && (
+                        <div className="panel-content">
+                            <h3>已完成</h3>
+                            <button onClick={() => setShowInput(true)}>创建</button>
+                            {showInput && (
+                                <div className="input-area">
+                                    <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+                                           placeholder="输入内容"/>
+                                    <input type="file" onChange={handleFileChange}/>
+                                    {attachmentPreview && (
+                                        <div className="attachment-preview">
+                                            <h4>附件预览:</h4>
+                                            {attachment ? (
+                                                attachment.type !== 'application/pdf' ? (
+                                                    <img src={attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
+                                                ) : (
+                                                    <a href={attachmentPreview} target="_blank"
+                                                       rel="noopener noreferrer">{attachment.name}</a>
+                                                )
+                                            ) : (
+                                                <p>请上传文件以查看预览。</p>
+                                            )}
+                                        </div>
+                                    )}
+                                    <button onClick={handleAddOrUpdateItem}>{editingIndex !== null ? '更新' : '添加'}</button>
+                                    {editingIndex !== null && <button onClick={() => setEditingIndex(null)}>取消编辑</button>}
+                                </div>
+                            )}
 
-            {activePanel === null && (
-                <div className="instructions">
-                    <p>请点击任一面板以显示相应内容。</p>
-                </div>
-            )}
-        </div>
+                            <div className="item-list">
+                                {TaskList.map((item, index) => (
+                                    <div key={index} className="item">
+                                        <a rel="noopener noreferrer">{item.text} </a>
+                                        <span className="tag">{item.tag}</span>
+
+                                        <span className="attachment">
+                                    {item.attachment ? (
+                                        item.attachment.type !== 'application/pdf' ? (
+                                            <img src={item.attachmentPreview} alt="Attachment" style={{width: '200px'}}/>
+                                        ) : (
+                                            <a href={item.attachmentPreview} target="_blank"
+                                               rel="noopener noreferrer">{item.attachment.name}</a>
+                                        )
+                                    ) : (
+                                        <p>可以上传附件</p>
+                                    )}
+                                    </span>
+                                        <div className="comments-section">
+                                            <button onClick={() => {
+                                                const commentsDiv = document.getElementById(`comments-${index}`);
+                                                commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
+                                            }}>
+                                                {item.comments.length > 0 ? '收起评论' : '添加评论'}
+                                            </button>
+                                            <div id={`comments-${index}`} style={{display: 'none'}}>
+                                                {item.comments.map((comment, i) => (
+                                                    <div key={i} className="comment">
+                                                        <span>{comment.text} </span>
+                                                        <span className="comment-time">({comment.time})</span>
+                                                    </div>
+                                                ))}
+                                                <input
+                                                    type="text"
+                                                    placeholder="添加评论"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && e.target.value) {
+                                                            handleAddComment(index, e.target.value);
+                                                            e.target.value = '';
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button onClick={() => handleEditItem(index)}>编辑</button>
+                                        <button onClick={() => handleDeleteItem(index)}>删除</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {activePanel === null && (
+                        <div className="instructions">
+                            <p>请点击任一面板以显示相应内容。</p>
+                        </div>
+                    )}
+            </div>
+        </>
     );
 };
 
